@@ -2,9 +2,80 @@
 在使用小米电机的时候我们通常会选择一种模式进行控制，可以参考示例代码中的各种模式控制代码。
 
 除了发送控制指令对电机进行控制外，我们通常还需要获取电机的状态，这时候就需要用到CAN中断回调函数来接收电机返回的信息，同样可以参考示例代码中的中断回调函数代码。
+## 驱动介绍
+小米电机结构体
+- 我们定义了小米电机结构体来标识电机的数据。
+    ```C
+    MI_Motor_t
+    ```
+- 使用对应的初始化函数进行初始化。
+    ```C
+    MI_motor_Init()
+    ```
 
-# 示例代码
-## 运动控制模式
+依据[CyberGear官方文档](https://gitee.com/SMBU-POLARBEAR/technical-documentation/blob/master/%E7%94%B5%E6%9C%BA/%E5%B0%8F%E7%B1%B3/CyberGear%E5%BE%AE%E7%94%B5%E6%9C%BA%E4%BD%BF%E7%94%A8%E8%AF%B4%E6%98%8E%E4%B9%A6.pdf)我们写了对应的几种通信类型<br>
+
+- 通信类型0：获取设备 ID，获取设备的ID和64位MCU唯一标识符。
+    ```C
+    MI_motor_GetID()
+    ```
+- 通信类型1： 运控模式电机控制指令，用来向电机发送控制指令 。
+    ```C
+    MI_motor_Control()
+    ```
+- 通信类型2：电机反馈数据，在CAN中断回调函数中使用，用来向主机反馈电机运行状态。
+    ```C
+    MI_motor_RxDecode()
+    ```
+- 通信类型3：电机使能运行，启动电机。
+    ```C
+    MI_motor_Enable()
+    ```
+- 通信类型4：电机停止运行。
+    ```C
+    MI_motor_Stop()
+    ```
+- 通信类型6：设置电机机械零位，会把当前电机位置设为机械零位（掉电丢失） 。
+    ```C
+    MI_motor_SetMechPositionToZero()
+    ```
+- 通信类型7： 设置电机 CAN_ID，更改当前电机 CAN_ID , 立即生效。
+    ```C
+    MI_motor_ChangeID()
+    ```
+- 通信类型17：单个参数读取。
+    ```C
+    MI_motor_ReadParam()
+    ```
+- 通信类型18：单个参数写入。
+    ```C
+    MI_motor_ModeSwitch()
+    MI_motor_WritePram()
+    ```
+<!-- - 通信类型21： -->
+
+同时我们也封装了不同控制模式的函数，直接使用即可。
+- 运动控制模式
+    ```C
+    MI_motor_ControlMode()
+    ```
+- 位置模式
+    ```C
+    MI_motor_LocationMode()
+    ```
+- 速度模式
+    ```C
+    MI_motor_SpeedMode()
+    ```
+- 电流模式
+    ```C
+    MI_motor_CurrentMode()
+    ```
+
+为了接收电机的数据，我们还提供了[CAN中断回调函数的示例代码](#can中断回调函数)
+
+## 示例代码
+### 运动控制模式
 ```C
 #include "MI_motor_drive.h"
 extern CAN_HandleTypeDef hcan1;
@@ -24,7 +95,7 @@ void control_task(void const *pvParameters)
 }
 ```
 
-## 位置模式
+### 位置模式
 ```C
 #include "MI_motor_drive.h"
 extern CAN_HandleTypeDef hcan1;
@@ -45,7 +116,7 @@ void control_task(void const *pvParameters)
 }
 ```
 
-## 速度模式
+### 速度模式
 ```C
 #include "MI_motor_drive.h"
 extern CAN_HandleTypeDef hcan1;
@@ -65,7 +136,7 @@ void control_task(void const *pvParameters)
 }
 ```
 
-## 电流模式
+### 电流模式
 ```C
 #include "MI_motor_drive.h"
 extern CAN_HandleTypeDef hcan1;
@@ -85,7 +156,7 @@ void control_task(void const *pvParameters)
 }
 ```
 
-## CAN中断回调函数
+### CAN中断回调函数
 ```C
 /**
   * @brief          hal库CAN回调函数,接收电机数据
@@ -98,17 +169,27 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
     RxCAN_info_s RxCAN_info;//用于存储小米电机反馈的数据
     uint8_t rx_data[8];
 
-    HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO0, &rx_header, rx_data);//获取CAN数据
-    if (rx_header.IDE == CAN_ID_EXT) {//小米电机解码
-        memcpy(&RxCAN_info,&rx_header.ExtId,29);//将扩展标识符的内容解码成对应内容
+    HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO0, &rx_header, rx_data);
 
-        if (RxCAN_info.communication_type == 2){//若为通信类型2的反馈帧就对应解码
-          MI_motor_RxDecode(&RxCAN_info,rx_data);
-        }
+    memcpy(&RxCAN_info,&rx_header.ExtId,4);//将扩展标识符的内容解码到缓存区，获取通信类型
 
-        if (RxCAN_info.motor_id == 1){//根据ID更新对应电机的返回值
-            MI_Motor.RxCAN_info = RxCAN_info;
+    if(RxCAN_info.communication_type == 0){//通信类型0的反馈帧解码
+        RxCAN_info_type_0_s RxCAN_info_type_0;
+        memcpy(&RxCAN_info_type_0,&rx_header.ExtId,4);//将扩展标识符的内容解码成通信类型0的对应内容
+        memcpy(&RxCAN_info_type_0.MCU_id,rx_data,8);//获取MCU标识符
+        OutputData.data_3 = RxCAN_info_type_0.motor_id;
+    }else if(RxCAN_info.communication_type == 2){//通信类型2的反馈帧解码
+        RxCAN_info_type_2_s RxCAN_info_type_2;
+        memcpy(&RxCAN_info_type_2,&rx_header.ExtId,4);//将扩展标识符的内容解码成通信类型2的对应内容
+        MI_motor_RxDecode(&RxCAN_info_type_2,rx_data);//通信类型2的数据解码
+        if (RxCAN_info_type_2.motor_id == 1){
+            MI_Motor.RxCAN_info = RxCAN_info_type_2;
         }
+    }else if(RxCAN_info.communication_type == 17){//通信类型17的反馈帧解码
+        RxCAN_info_type_17_s RxCAN_info_type_17;
+        memcpy(&RxCAN_info_type_17,&rx_header.ExtId,4);//将扩展标识符的内容解码成通信类型17的对应内容
+        memcpy(&RxCAN_info_type_17.index,&rx_data[0],2);//获取查找的参数索引码
+        memcpy(&RxCAN_info_type_17.param,&rx_data[4],4);//获取查找的参数信息
     }
 }
 ```

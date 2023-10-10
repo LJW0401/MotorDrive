@@ -50,7 +50,7 @@ float RangeRestrict(float x, float x_min, float x_max)
   * @param[in]      phcan can总线句柄
   * @retval         none
   */
-void MI_motor_Init(MI_Motor_t* hmotor,CAN_HandleTypeDef *phcan, uint8_t motor_id)
+void MI_motor_Init(MI_Motor_s* hmotor,CAN_HandleTypeDef *phcan, uint8_t motor_id)
 {
     hmotor->phcan = phcan;
     hmotor->motor_id = motor_id;
@@ -61,7 +61,7 @@ void MI_motor_Init(MI_Motor_t* hmotor,CAN_HandleTypeDef *phcan, uint8_t motor_id
   * @param[in]      hmotor 电机结构体
   * @retval         none
   */
-void MI_motor_CanTx(MI_Motor_t* hmotor)
+void MI_motor_CanTx(MI_Motor_s* hmotor)
 {
     CAN_TxHeader_MI.DLC = 8;
     CAN_TxHeader_MI.IDE = CAN_ID_EXT;
@@ -84,7 +84,7 @@ void MI_motor_CanTx(MI_Motor_t* hmotor)
   * @param[in]      hmotor 电机结构体
   * @retval         none
   */
-void MI_motor_GetID(MI_Motor_t* hmotor)
+void MI_motor_GetID(MI_Motor_s* hmotor)
 {
     hmotor->EXT_ID.mode = 0;
     hmotor->EXT_ID.data = 0;
@@ -109,7 +109,7 @@ void MI_motor_GetID(MI_Motor_t* hmotor)
   * @param[in]      kd 
   * @retval         none
   */
-void MI_motor_Control(MI_Motor_t* hmotor, float torque, float MechPosition , float speed , float kp , float kd)
+void MI_motor_Control(MI_Motor_s* hmotor, float torque, float MechPosition , float speed , float kp , float kd)
 {
     hmotor->EXT_ID.mode = 1;
     hmotor->EXT_ID.motor_id = hmotor->motor_id;
@@ -129,12 +129,35 @@ void MI_motor_Control(MI_Motor_t* hmotor, float torque, float MechPosition , flo
 }
 
 /**
+  * @brief          小米电机反馈帧解码（通信类型2）
+  * @param[in]      Rx_can_info 接受到的电机数据结构体
+  * @param[in]      rx_data[8] CAN线接收到的数据
+  * @note           将接收到的CAN线数据解码到电机数据结构体中
+  * @retval         none
+  */
+void MI_motor_RxDecode(RxCAN_info_type_2_s* RxCAN_info,uint8_t rx_data[8])
+{
+    uint16_t decode_temp_mi;//小米电机反馈数据解码缓冲
+    decode_temp_mi = (rx_data[0] << 8 | rx_data[1]);
+    RxCAN_info->angle = ((float)decode_temp_mi-32767.5)/32767.5*4*3.1415926f;;
+
+    decode_temp_mi = (rx_data[2] << 8 | rx_data[3]);
+    RxCAN_info->speed = ((float)decode_temp_mi-32767.5)/32767.5*30.0f;
+
+    decode_temp_mi = (rx_data[4] << 8 | rx_data[5]);
+    RxCAN_info->torque = ((float)decode_temp_mi-32767.5)/32767.5*12.0f;
+
+    decode_temp_mi = (rx_data[6] << 8 | rx_data[7]);
+    RxCAN_info->temperature = (float)decode_temp_mi/10.0f;
+ }
+
+/**
   * @brief          小米电机使能（通信类型 3）
   * @param[in]      hmotor 电机结构体
   * @param[in]      id 电机id
   * @retval         none
   */
-void MI_motor_Enable(MI_Motor_t* hmotor)
+void MI_motor_Enable(MI_Motor_s* hmotor)
 {
     hmotor->EXT_ID.mode = 3;
     hmotor->EXT_ID.motor_id = hmotor->motor_id;
@@ -153,7 +176,7 @@ void MI_motor_Enable(MI_Motor_t* hmotor)
   * @param[in]      hmotor 电机结构体
   * @retval         none
   */
-void MI_motor_Stop(MI_Motor_t* hmotor)
+void MI_motor_Stop(MI_Motor_s* hmotor)
 {
     hmotor->EXT_ID.mode = 4;
     hmotor->EXT_ID.motor_id = hmotor->motor_id;
@@ -173,7 +196,7 @@ void MI_motor_Stop(MI_Motor_t* hmotor)
   * @param[in]      hmotor 电机结构体
   * @retval         none
   */
-void MI_motor_SetMechPositionToZero(MI_Motor_t* hmotor)
+void MI_motor_SetMechPositionToZero(MI_Motor_s* hmotor)
 {
     hmotor->EXT_ID.mode = 6;
     hmotor->EXT_ID.motor_id = hmotor->motor_id;
@@ -196,7 +219,7 @@ void MI_motor_SetMechPositionToZero(MI_Motor_t* hmotor)
   * @param[in]      Target_ID 想要改成的电机ID
   * @retval         none
   */
-void MI_motor_ChangeID(MI_Motor_t* hmotor,uint8_t Now_ID,uint8_t Target_ID)
+void MI_motor_ChangeID(MI_Motor_s* hmotor,uint8_t Now_ID,uint8_t Target_ID)
 {
     hmotor->motor_id = Now_ID;
 
@@ -219,7 +242,7 @@ void MI_motor_ChangeID(MI_Motor_t* hmotor,uint8_t Now_ID,uint8_t Target_ID)
   * @param[in]      index 功能码
   * @retval         none
   */
-void MI_motor_ReadParam(MI_Motor_t* hmotor,uint16_t index)
+void MI_motor_ReadParam(MI_Motor_s* hmotor,uint16_t index)
 {
     hmotor->EXT_ID.mode = 17;
     hmotor->EXT_ID.motor_id = hmotor->motor_id;
@@ -243,7 +266,7 @@ void MI_motor_ReadParam(MI_Motor_t* hmotor,uint16_t index)
   * @note           通信类型18 （掉电丢失）
   * @retval         none
   */
-void MI_motor_ModeSwitch(MI_Motor_t* hmotor, uint8_t run_mode)
+void MI_motor_ModeSwitch(MI_Motor_s* hmotor, uint8_t run_mode)
 {
     uint16_t index = 0X7005;
 
@@ -270,7 +293,7 @@ void MI_motor_ModeSwitch(MI_Motor_t* hmotor, uint8_t run_mode)
   * @note           通信类型18 （掉电丢失）
   * @retval         none
   */
- void MI_motor_WritePram(MI_Motor_t* hmotor, uint16_t index, float param)
+ void MI_motor_WritePram(MI_Motor_s* hmotor, uint16_t index, float param)
  {
     hmotor->EXT_ID.mode = 18;
     hmotor->EXT_ID.motor_id = hmotor->motor_id;
@@ -285,29 +308,6 @@ void MI_motor_ModeSwitch(MI_Motor_t* hmotor, uint8_t run_mode)
     MI_motor_CanTx(hmotor);
  }
 
-/**
-  * @brief          小米电机反馈帧解码（通信类型2）
-  * @param[in]      Rx_can_info 接受到的电机数据结构体
-  * @param[in]      rx_data[8] CAN线接收到的数据
-  * @note           将接收到的CAN线数据解码到电机数据结构体中
-  * @retval         none
-  */
-void MI_motor_RxDecode(RxCAN_info_s* RxCAN_info,uint8_t rx_data[8])
-{
-    uint16_t decode_temp_mi;//小米电机反馈数据解码缓冲
-    decode_temp_mi = (rx_data[0] << 8 | rx_data[1]);
-    RxCAN_info->angle = ((float)decode_temp_mi-32767.5)/32767.5*4*3.1415926f;;
-
-    decode_temp_mi = (rx_data[2] << 8 | rx_data[3]);
-    RxCAN_info->speed = ((float)decode_temp_mi-32767.5)/32767.5*30.0f;
-
-    decode_temp_mi = (rx_data[4] << 8 | rx_data[5]);
-    RxCAN_info->torque = ((float)decode_temp_mi-32767.5)/32767.5*12.0f;
-
-    decode_temp_mi = (rx_data[6] << 8 | rx_data[7]);
-    RxCAN_info->temperature = (float)decode_temp_mi/10.0f;
- }
-
 /*-------------------- 封装的一些控制函数 --------------------*/
 
 /**
@@ -320,7 +320,7 @@ void MI_motor_RxDecode(RxCAN_info_s* RxCAN_info,uint8_t rx_data[8])
   * @param[in]      kd 
   * @retval         none
   */
-void MI_motor_ControlMode(MI_Motor_t* hmotor, float torque, float MechPosition , float speed , float kp , float kd)
+void MI_motor_ControlMode(MI_Motor_s* hmotor, float torque, float MechPosition , float speed , float kp , float kd)
 {
     MI_motor_ModeSwitch(hmotor, CONTROL_MODE);
     MI_motor_Enable(hmotor);
@@ -334,7 +334,7 @@ void MI_motor_ControlMode(MI_Motor_t* hmotor, float torque, float MechPosition ,
   * @param[in]      limit_spd 预设最大速度(0~30rad/s)
   * @retval         none
   */
-void MI_motor_LocationMode(MI_Motor_t* hmotor, float loc_ref, float limit_spd)
+void MI_motor_LocationMode(MI_Motor_s* hmotor, float loc_ref, float limit_spd)
 {
     MI_motor_ModeSwitch(hmotor, LOCATION_MODE);
     MI_motor_Enable(hmotor);
@@ -348,7 +348,7 @@ void MI_motor_LocationMode(MI_Motor_t* hmotor, float loc_ref, float limit_spd)
   * @param[in]      spd_ref 控制速度
   * @retval         none
   */
-void MI_motor_SpeedMode(MI_Motor_t* hmotor, float spd_ref)
+void MI_motor_SpeedMode(MI_Motor_s* hmotor, float spd_ref)
 {
     MI_motor_ModeSwitch(hmotor, SPEED_MODE);
     MI_motor_Enable(hmotor);
@@ -361,7 +361,7 @@ void MI_motor_SpeedMode(MI_Motor_t* hmotor, float spd_ref)
   * @param[in]      iq_ref 控制电流
   * @retval         none
   */
-void MI_motor_CurrentMode(MI_Motor_t* hmotor, float iq_ref)
+void MI_motor_CurrentMode(MI_Motor_s* hmotor, float iq_ref)
 {
     MI_motor_ModeSwitch(hmotor, CURRENT_MODE);
     MI_motor_Enable(hmotor);

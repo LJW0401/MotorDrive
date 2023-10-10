@@ -89,7 +89,23 @@ typedef struct
     uint32_t data : 16;
     uint32_t mode : 5;
     uint32_t res : 3;
-} EXT_ID_t; // 32位扩展ID解析结构体
+} __attribute__((packed)) EXT_ID_t; // 32位扩展ID解析结构体
+
+typedef struct
+{
+    uint32_t info : 24;
+    uint32_t communication_type : 5;
+    uint32_t res : 3;
+}__attribute__((packed)) RxCAN_info_s;// 解码内容缓存
+
+typedef struct
+{
+    uint32_t FE : 8;
+    uint32_t motor_id : 16;
+    uint32_t communication_type : 5;
+    uint32_t res : 3;
+    uint32_t MCU_id;
+}__attribute__((packed)) RxCAN_info_type_0_s;// 通信类型0解码内容
 
 typedef struct
 {
@@ -108,7 +124,18 @@ typedef struct
     float speed;//(rad/s)
     float torque;//(N*m)
     float temperature;//(℃)
-} __attribute__((packed)) RxCAN_info_s; // 通信类型2解码内容
+} __attribute__((packed)) RxCAN_info_type_2_s; // 通信类型2解码内容
+
+typedef struct
+{
+    uint32_t motor_id : 8;
+    uint32_t master_can_id : 16;
+    uint32_t communication_type : 5;
+    uint32_t res : 3;
+    uint16_t index;
+    float param;
+}__attribute__((packed)) RxCAN_info_type_17_s;// 通信类型17解码内容
+
 typedef struct
 {
     CAN_HandleTypeDef *phcan;
@@ -117,26 +144,31 @@ typedef struct
     EXT_ID_t EXT_ID;
     uint8_t motor_id;
     uint8_t txdata[8];
-    RxCAN_info_s RxCAN_info;
-} MI_Motor_t;
-/**********************Functions*************************8*/
+    RxCAN_info_type_2_s RxCAN_info;
+} MI_Motor_s;
 
-void MI_motor_Init(MI_Motor_t* hmotor, CAN_HandleTypeDef *phcan, uint8_t motor_id);
-void MI_motor_GetID(MI_Motor_t* hmotor);
-void MI_motor_RxDecode(RxCAN_info_s* RxCAN_info,uint8_t rx_data[8]);
-void MI_motor_Enable(MI_Motor_t *hmotor);
-void MI_motor_Stop(MI_Motor_t *hmotor);
-void MI_motor_SetMechPositionToZero(MI_Motor_t *hmotor);
-void MI_motor_ChangeID(MI_Motor_t* hmotor,uint8_t Now_ID,uint8_t Target_ID);
-void MI_motor_ReadParam(MI_Motor_t* hmotor, uint16_t index);
+/**********************Functions**************************/
+
+void MI_motor_Init(MI_Motor_s* hmotor, CAN_HandleTypeDef *phcan, uint8_t motor_id);
 
 
-void MI_motor_ControlMode(MI_Motor_t* hmotor, float torque, float MechPosition , float speed , float kp , float kd);
-void MI_motor_LocationMode(MI_Motor_t* hmotor, float loc_ref, float limit_spd);
-void MI_motor_SpeedMode(MI_Motor_t* hmotor, float spd_ref);
-void MI_motor_CurrentMode(MI_Motor_t* hmotor, float iq_ref);
+void MI_motor_GetID(MI_Motor_s* hmotor);
+void MI_motor_RxDecode(RxCAN_info_type_2_s* RxCAN_info,uint8_t rx_data[8]);
+void MI_motor_Enable(MI_Motor_s *hmotor);
+void MI_motor_Stop(MI_Motor_s *hmotor);
+void MI_motor_SetMechPositionToZero(MI_Motor_s *hmotor);
+void MI_motor_ChangeID(MI_Motor_s* hmotor,uint8_t Now_ID,uint8_t Target_ID);
+void MI_motor_ReadParam(MI_Motor_s* hmotor, uint16_t index);
+
+
+void MI_motor_ControlMode(MI_Motor_s* hmotor, float torque, float MechPosition , float speed , float kp , float kd);
+void MI_motor_LocationMode(MI_Motor_s* hmotor, float loc_ref, float limit_spd);
+void MI_motor_SpeedMode(MI_Motor_s* hmotor, float spd_ref);
+void MI_motor_CurrentMode(MI_Motor_s* hmotor, float iq_ref);
+
 
 extern uint8_t MI_MASTERID;
+
 
 #endif
  
