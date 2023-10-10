@@ -2,6 +2,11 @@
 在使用小米电机的时候我们通常会选择一种模式进行控制，可以参考示例代码中的各种模式控制代码。
 
 除了发送控制指令对电机进行控制外，我们通常还需要获取电机的状态，这时候就需要用到CAN中断回调函数来接收电机返回的信息，同样可以参考示例代码中的中断回调函数代码。
+
+## 完整功能体验
+- [Gitee](https://gitee.com/Ljw0401/let-xiaomi-motor-move)
+- 
+
 ## 驱动介绍
 小米电机结构体
 - 我们定义了小米电机结构体来标识电机的数据。
@@ -193,3 +198,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
     }
 }
 ```
+
+## 参考资料
+[CyberGear微电机使用说明书.pdf](https://gitee.com/SMBU-POLARBEAR/technical-documentation/blob/master/%E7%94%B5%E6%9C%BA/%E5%B0%8F%E7%B1%B3/CyberGear%E5%BE%AE%E7%94%B5%E6%9C%BA%E4%BD%BF%E7%94%A8%E8%AF%B4%E6%98%8E%E4%B9%A6.pdf)<br>
+[小米微电机STM32 HAL库驱动教程](https://blog.csdn.net/m0_53802226/article/details/132941275)<br>
