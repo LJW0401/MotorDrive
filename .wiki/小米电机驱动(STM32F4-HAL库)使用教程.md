@@ -60,27 +60,24 @@
 <!-- - 通信类型21： -->
 
 同时我们也封装了不同控制模式的函数，直接使用即可。
-- 运动控制模式
+>因为在2023.10.11的测试中发现之前按照小米官方文档写的函数驱动多台电机时出现问题，参考[小米电机CyberGear STM32HAL 使用指南](https://blog.csdn.net/zdYukino/article/details/133505453)后修改了位置模式和速度模式的控制方式，至于依据小米官方文档的控制方式继续研究中。
+- 力矩模式
     ```C
-    MI_motor_ControlMode()
+    MI_motor_TorqueControl()
     ```
 - 位置模式
     ```C
-    MI_motor_LocationMode()
+    MI_motor_LocationControl()
     ```
 - 速度模式
     ```C
-    MI_motor_SpeedMode()
-    ```
-- 电流模式
-    ```C
-    MI_motor_CurrentMode()
+    MI_motor_SpeedControl()
     ```
 
 为了接收电机的数据，我们还提供了[CAN中断回调函数的示例代码](#can中断回调函数)
 
 ## 示例代码
-### 运动控制模式
+### 力矩模式
 ```C
 #include "MI_motor_drive.h"
 extern CAN_HandleTypeDef hcan1;
@@ -90,10 +87,11 @@ MI_Motor_t MI_motor;
 void control_task(void const *pvParameters)
 {
     MI_motor_Init(&MI_Motor,&MI_CAN_1,1);//小米电机结构体初始化
+    MI_motor_Enable(&MI_Motor);//电机使能
     while (1)
     {
         float torque = 1.0f;//设定输出力矩为1N*m
-        MI_motor_ControlMode(&MI_Motor, torque, 0, 0, 0, 0);//发送控制信号
+        MI_motor_TorqueControl(&MI_Motor, torque);//发送控制信号
 
         vTaskDelay(4);//系统延时(os delay)
     }
@@ -110,11 +108,11 @@ MI_Motor_t MI_motor;
 void control_task(void const *pvParameters)
 {
     MI_motor_Init(&MI_Motor,&MI_CAN_1,1);//小米电机结构体初始化
+    MI_motor_Enable(&MI_Motor);//电机使能
     while (1)
     {
-        float loc_ref = 1;//设定停止在 1rad 的位置
-        float limit_spd = 1;//设定运行时的最大速度为 1rad/s
-        MI_motor_LocationMode(&MI_Motor,loc_ref,limit_spd);
+        float location = 1;//设定停止在 1rad 的位置
+        MI_motor_LocationControl(&MI_Motor,location,5,0.5);
 
         vTaskDelay(4);//系统延时(os delay)
     }
@@ -131,17 +129,18 @@ MI_Motor_t MI_motor;
 void control_task(void const *pvParameters)
 {
     MI_motor_Init(&MI_Motor,&MI_CAN_1,1);//小米电机结构体初始化
+    MI_motor_Enable(&MI_Motor);//电机使能
     while (1)
     {
-        float spd_ref = 2;//设定运行速度为 1rad/s
-        MI_motor_SpeedMode(&MI_Motor,spd_ref);
+        float speed = 2;//设定运行速度为 1rad/s
+        MI_motor_SpeedControl(&MI_Motor,spd_ref,1);
 
         vTaskDelay(4);//系统延时(os delay)
     }
 }
 ```
 
-### 电流模式
+<!-- ### 电流模式
 ```C
 #include "MI_motor_drive.h"
 extern CAN_HandleTypeDef hcan1;
@@ -159,7 +158,7 @@ void control_task(void const *pvParameters)
         vTaskDelay(4);//系统延时(os delay)
     }
 }
-```
+``` -->
 
 ### CAN中断回调函数
 ```C
@@ -202,3 +201,4 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
 ## 参考资料
 [CyberGear微电机使用说明书.pdf](https://gitee.com/SMBU-POLARBEAR/technical-documentation/blob/master/%E7%94%B5%E6%9C%BA/%E5%B0%8F%E7%B1%B3/CyberGear%E5%BE%AE%E7%94%B5%E6%9C%BA%E4%BD%BF%E7%94%A8%E8%AF%B4%E6%98%8E%E4%B9%A6.pdf)<br>
 [小米微电机STM32 HAL库驱动教程](https://blog.csdn.net/m0_53802226/article/details/132941275)<br>
+[小米电机CyberGear STM32HAL 使用指南](https://blog.csdn.net/zdYukino/article/details/133505453)<br>

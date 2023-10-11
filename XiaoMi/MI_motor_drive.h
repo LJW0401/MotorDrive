@@ -161,10 +161,10 @@ void MI_motor_ChangeID(MI_Motor_s* hmotor,uint8_t Now_ID,uint8_t Target_ID);
 void MI_motor_ReadParam(MI_Motor_s* hmotor, uint16_t index);
 
 
-void MI_motor_ControlMode(MI_Motor_s* hmotor, float torque, float MechPosition , float speed , float kp , float kd);
-void MI_motor_LocationMode(MI_Motor_s* hmotor, float loc_ref, float limit_spd);
-void MI_motor_SpeedMode(MI_Motor_s* hmotor, float spd_ref);
-void MI_motor_CurrentMode(MI_Motor_s* hmotor, float iq_ref);
+void MI_motor_TorqueControl(MI_Motor_s* hmotor, float torque);
+void MI_motor_LocationControl(MI_Motor_s* hmotor, float location, float kp, float kd);
+void MI_motor_SpeedControl(MI_Motor_s* hmotor, float speed, float kd);
+// void MI_motor_CurrentMode(MI_Motor_s* hmotor, float iq_ref);
 
 
 extern uint8_t MI_MASTERID;
