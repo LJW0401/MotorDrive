@@ -1,9 +1,20 @@
 /**
- *
- * @File:        MI_motor_drive.h
- * @Author:      小企鹅
- *
- */
+  ****************************(C) COPYRIGHT 2023 POLARBEAR****************************
+  * @file       MI_motor_drive.h
+  * @brief      小米电机CyberGear驱动
+  * @note       
+  * @history
+  *  Version    Date            Author          Modification
+  *  V1.0.0     Oct-11-2023     小企鹅           1. done
+  *
+  @verbatim
+  ==============================================================================
+
+  ==============================================================================
+  @endverbatim
+  ****************************(C) COPYRIGHT 2023 POLARBEAR****************************
+  */
+
 #ifndef MI_MOTOR_DRIVE_H
 #define MI_MOTOR_DRIVE_H
 #ifdef __cplusplus
