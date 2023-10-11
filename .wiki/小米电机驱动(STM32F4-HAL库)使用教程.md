@@ -132,7 +132,7 @@ void control_task(void const *pvParameters)
     MI_motor_Enable(&MI_Motor);//电机使能
     while (1)
     {
-        float speed = 2;//设定运行速度为 1rad/s
+        float speed = 2;//设定运行速度为 2rad/s
         MI_motor_SpeedControl(&MI_Motor,spd_ref,1);
 
         vTaskDelay(4);//系统延时(os delay)
