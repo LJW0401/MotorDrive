@@ -71,7 +71,7 @@ typedef enum
     CONTROL_MODE  = 0, //运控模式
     LOCATION_MODE = 1, //位置模式
     SPEED_MODE    = 2, //速度模式
-    CURRENT_MODE  = 3 //电流模式
+    CURRENT_MODE  = 3  //电流模式
 } motor_run_mode_e;//电机运行模式
 
 typedef enum
@@ -89,10 +89,10 @@ typedef enum
 
 typedef enum
 {
-    RESET_MODE = 0,//Reset[模式]
+    RESET_MODE = 0,//Reset模式[复位]
     CALI_MODE  = 1,//Cali 模式[标定]
-    RUN_MODE   = 2//Motor模式[运行]
-} motor_mode_e;//电机状态模式
+    RUN_MODE   = 2 //Motor模式[运行]
+} motor_mode_state_e;//电机模式状态
 
 typedef struct
 {
@@ -128,7 +128,7 @@ typedef struct
     uint32_t magnetic_encoding_fault : 1;
     uint32_t HALL_encoding_failure : 1;
     uint32_t unmarked : 1;
-    uint32_t mode_status : 2;
+    uint32_t mode_state : 2;
     uint32_t communication_type : 5;
     uint32_t res : 3;
     float angle;//(rad)
@@ -151,7 +151,7 @@ typedef struct
 {
     CAN_HandleTypeDef *phcan;
     motor_state_e motor_state;
-    motor_mode_e  motor_mode;
+    motor_mode_state_e  motor_mode_state;
     EXT_ID_t EXT_ID;
     uint8_t motor_id;
     uint8_t txdata[8];

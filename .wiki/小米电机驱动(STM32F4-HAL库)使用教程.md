@@ -188,6 +188,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
         MI_motor_RxDecode(&RxCAN_info_type_2,rx_data);//通信类型2的数据解码
         if (RxCAN_info_type_2.motor_id == 1){
             MI_Motor.RxCAN_info = RxCAN_info_type_2;
+            MI_Motor.motor_mode_state = RxCAN_info_type_2.mode_state;
         }
     }else if(RxCAN_info.communication_type == 17){//通信类型17的反馈帧解码
         RxCAN_info_type_17_s RxCAN_info_type_17;
