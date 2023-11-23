@@ -133,7 +133,7 @@ void control_task(void const *pvParameters)
     while (1)
     {
         float speed = 2;//设定运行速度为 2rad/s
-        MI_motor_SpeedControl(&MI_Motor,spd_ref,1);
+        MI_motor_SpeedControl(&MI_Motor,speed,1);
 
         vTaskDelay(4);//系统延时(os delay)
     }
