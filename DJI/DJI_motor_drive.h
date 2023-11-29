@@ -31,6 +31,11 @@ typedef enum _CAN_TxSTD_ID_e
 } CAN_TxSTD_ID_e;
 
 void CANSendDJIMotorCurrent(CAN_HandleTypeDef *CAN, CAN_TxHeaderTypeDef *tx_message, CAN_STD_ID_e CAN_STD_ID, int16_t current1, int16_t current2, int16_t current3, int16_t current4)
+void CANCmdGimbal(int16_t yaw, int16_t pitch, int16_t rev);
+void CAN_cmd_gimbal(int16_t yaw, int16_t pitch, int16_t rev);
+void CANCmdChassis(int16_t motor1, int16_t motor2, int16_t motor3, int16_t motor4);
+void CAN_cmd_chassis(int16_t motor1, int16_t motor2, int16_t motor3, int16_t motor4);
+void CANCmdShoot(int16_t friction_wheel_left, int16_t friction_wheel_right, int16_t trigger, int16_t rev);
 
 
 #endif  // __DJI_MOTOR_DRIVE_H
