@@ -222,7 +222,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
 # 附录
 ## 附录1 小米电机can通信协议
 
-- 通信类型 0：获取设备 ID，获取设备的ID和64位MCU唯一标识符
+**通信类型 0**：获取设备 ID，获取设备的ID和64位MCU唯一标识符
 <table>
 <tr>
     <th>数据域</th>
@@ -240,15 +240,14 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
 
 <tr>
     <td>描述</td>
-    <td>0</td>
+    <td>目标电机CAN_ID</td>
     <td>8~15：用来标识主机CAN_ID<br>
         15~23：0</td>
-    <td>目标电机CAN_ID</td>
+    <td>0</td>
     <td>0</td>
 </tr>
 </table>
-
-- 通信类型 1：运控模式电机控制指令，用来向电机发送控制指令 
+应答帧：
 <table>
 <tr>
     <th>数据域</th>
@@ -266,18 +265,44 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
 
 <tr>
     <td>描述</td>
-    <td>1</td>
+    <td>0xFE</td>
+    <td>目标电机 CAN_ID</td>
+    <td>0</td>
+    <td>64 位 MCU 唯一标识符</td>
+</tr>
+</table>
+
+**通信类型 1**：运控模式电机控制指令，用来向电机发送控制指令 
+<table>
+<tr>
+    <th>数据域</th>
+    <th colspan="3"><center>ExtID(29 bit)</center></th>
+    <th>数据区(8 Byte)</th>
+</tr>
+
+<tr>
+    <td>数据域</td>
+    <td>0~7</td>
+    <td>8~23</td>
+    <td>24~28</td>
+    <td>0~7</td>
+</tr>
+
+<tr>
+    <td>描述</td>
+    <td>目标电机CAN_ID</td>
     <td>力矩(0~65535)<br>
         对应(-12Nm~12Nm)</td>
-    <td>目标电机CAN_ID</td>
+    <td>1</td>
     <td>0~1: 目标角度[0~65535]对应(-4π~4π)<br>
         2~3: 目标角速度[0~65535]对应(-30rad/s~30rad/s)<br>
         4~5：Kp [0~65535]对应(0.0~500.0)<br>
         6~7：Kd [0~65535]对应(0.0~5.0)</td>
 </tr>
 </table>
+应答帧：应答电机反馈帧(见通信类型 2)
 
-- 通信类型 2：电机反馈数据，用来向主机反馈电机运行状态 
+**通信类型 2**：电机反馈数据，用来向主机反馈电机运行状态 
 <table>
 <tr>
     <th>数据域</th>
@@ -295,7 +320,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
 
 <tr>
     <td>描述</td>
-    <td>1</td>
+    <td>目标电机CAN_ID</td>
     <td>8~15:当前电机 CAN ID<br>
         bit21~16:故障信息（0 无 1 有）<br>
         bit21: 未标定<br>
@@ -308,10 +333,233 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
         0 : Reset 模式[复位]<br>
         1 : Cali 模式[标定]<br>
         2 : Motor 模式[运行]</td>
-    <td>目标电机CAN_ID</td>
+    <td>2</td>
     <td>0~1: 当前角度[0~65535]对应(-4π~4π)<br>
         2~3: 当前角速度[0~65535]对应(-30rad/s~30rad/s)<br>
         4~5:当前力矩[0~65535]对应（-12Nm~12Nm）<br>
         6~7:当前温度：Temp(摄氏度)*10</td>
+</tr>
+</table>
+
+**通信类型 3**：电机使能运行 
+<table>
+<tr>
+    <th>数据域</th>
+    <th colspan="3"><center>ExtID(29 bit)</center></th>
+    <th>数据区(8 Byte)</th>
+</tr>
+
+<tr>
+    <td>数据域</td>
+    <td>0~7</td>
+    <td>8~23</td>
+    <td>24~28</td>
+    <td>0~7</td>
+</tr>
+
+<tr>
+    <td>描述</td>
+    <td>目标电机CAN_ID</td>
+    <td>用来标识主CAN_ID</td>
+    <td>3</td>
+    <td>0</td>
+</tr>
+</table>
+应答帧：应答电机反馈帧(见通信类型 2) 
+
+**通信类型 4**：电机停止运行
+<table>
+<tr>
+    <th>数据域</th>
+    <th colspan="3"><center>ExtID(29 bit)</center></th>
+    <th>数据区(8 Byte)</th>
+</tr>
+
+<tr>
+    <td>数据域</td>
+    <td>0~7</td>
+    <td>8~23</td>
+    <td>24~28</td>
+    <td>0~7</td>
+</tr>
+
+<tr>
+    <td>描述</td>
+    <td>目标电机CAN_ID</td>
+    <td>用来标识主CAN_ID</td>
+    <td>4</td>
+    <td>正常运行时，data 区需清 0；<br>
+        Byte[0]=1 时：清故障；</td>
+</tr>
+</table>
+应答帧：应答电机反馈帧(见通信类型 2) 
+
+**通信类型 6**：设置电机机械零位，会把当前电机位置设为机械零位（掉电丢失）
+<table>
+<tr>
+    <th>数据域</th>
+    <th colspan="3"><center>ExtID(29 bit)</center></th>
+    <th>数据区(8 Byte)</th>
+</tr>
+
+<tr>
+    <td>数据域</td>
+    <td>0~7</td>
+    <td>8~23</td>
+    <td>24~28</td>
+    <td>0~7</td>
+</tr>
+
+<tr>
+    <td>描述</td>
+    <td>目标电机CAN_ID</td>
+    <td>用来标识主CAN_ID</td>
+    <td>6</td>
+    <td>Byte[0]=1</td>
+</tr>
+</table>
+应答帧：应答电机反馈帧(见通信类型 2) 
+
+**通信类型 7**：设置电机 CAN_ID，更改当前电机 CAN_ID , 立即生效。 
+<table>
+<tr>
+    <th>数据域</th>
+    <th colspan="3"><center>ExtID(29 bit)</center></th>
+    <th>数据区(8 Byte)</th>
+</tr>
+
+<tr>
+    <td>数据域</td>
+    <td>0~7</td>
+    <td>8~23</td>
+    <td>24~28</td>
+    <td>0~7</td>
+</tr>
+
+<tr>
+    <td>描述</td>
+    <td>目标电机CAN_ID</td>
+    <td>8~15:用来标识主CAN_ID<br>
+        16~23: 预设置 CAN_ID</td>
+    <td>7</td>
+    <td>0</td>
+</tr>
+</table>
+应答帧：应答电机广播帧(见通信类型 0)
+
+**通信类型 17**：单个参数读取
+<table>
+<tr>
+    <th>数据域</th>
+    <th colspan="3"><center>ExtID(29 bit)</center></th>
+    <th>数据区(8 Byte)</th>
+</tr>
+
+<tr>
+    <td>数据域</td>
+    <td>0~7</td>
+    <td>8~23</td>
+    <td>24~28</td>
+    <td>0~7</td>
+</tr>
+
+<tr>
+    <td>描述</td>
+    <td>目标电机CAN_ID</td>
+    <td>8~15:用来标识主CAN_ID</td>
+    <td>17</td>
+    <td>0~1: index<br>
+        2~3: 00<br>
+        4~7: 00 </td>
+</tr>
+</table>
+应答帧：
+<table>
+<tr>
+    <th>数据域</th>
+    <th colspan="3"><center>ExtID(29 bit)</center></th>
+    <th>数据区(8 Byte)</th>
+</tr>
+
+<tr>
+    <td>数据域</td>
+    <td>0~7</td>
+    <td>8~23</td>
+    <td>24~28</td>
+    <td>0~7</td>
+</tr>
+
+<tr>
+    <td>描述</td>
+    <td>电机CAN_ID</td>
+    <td>8~15:用来标识主CAN_ID</td>
+    <td>17</td>
+    <td>0~1: index，参数列表详见 4.1.11<br>
+        2~3: 00<br>
+        4~7: 参数数据，1 字节数据在 Byte4 </td>
+</tr>
+</table>
+
+**通信类型 18**：单个参数写入（掉电丢失） 
+<table>
+<tr>
+    <th>数据域</th>
+    <th colspan="3"><center>ExtID(29 bit)</center></th>
+    <th>数据区(8 Byte)</th>
+</tr>
+
+<tr>
+    <td>数据域</td>
+    <td>0~7</td>
+    <td>8~23</td>
+    <td>24~28</td>
+    <td>0~7</td>
+</tr>
+
+<tr>
+    <td>描述</td>
+    <td>目标电机CAN_ID</td>
+    <td>8~15:用来标识主CAN_ID</td>
+    <td>18</td>
+    <td>0~1: index<br>
+        2~3: 00<br>
+        4~7: 参数数据</td>
+</tr>
+</table>
+应答帧：应答电机反馈帧(见通信类型 2) 
+
+**通信类型 21**： 故障反馈帧
+<table>
+<tr>
+    <th>数据域</th>
+    <th colspan="3"><center>ExtID(29 bit)</center></th>
+    <th>数据区(8 Byte)</th>
+</tr>
+
+<tr>
+    <td>数据域</td>
+    <td>0~7</td>
+    <td>8~23</td>
+    <td>24~28</td>
+    <td>0~7</td>
+</tr>
+
+<tr>
+    <td>描述</td>
+    <td>目标电机CAN_ID</td>
+    <td>8~15:用来标识主CAN_ID</td>
+    <td>21</td>
+    <td>Byte0~3: fault 值(非 0:有故障，0：正常)<br>
+        &emsp;bit0:电机过温故障，默认 80 度<br>
+        &emsp;bit1:驱动芯片故障<br>
+        &emsp;bit2:欠压故障<br>
+        &emsp;bit3:过压故障<br>
+        &emsp;bit4:B 相电流采样过流<br>
+        &emsp;bit5:C 相电流采样过流<br>
+        &emsp;bit7:编码器未标定<br>
+        &emsp;bit15~bit8:过载故障<br>
+        &emsp;bit16:A 相电流采样过流<br>
+        Byte4~7: warning 值<br>
+        &emsp;bit0：电机过温预警，默认 75 度</td>
 </tr>
 </table>
