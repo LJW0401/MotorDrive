@@ -1,13 +1,27 @@
+
+- [介绍](#介绍)
+- [完整功能体验](#完整功能体验)
+- [驱动介绍](#驱动介绍)
+- [示例代码](#示例代码)
+  - [力矩模式](#力矩模式)
+  - [位置模式](#位置模式)
+  - [速度模式](#速度模式)
+  - [CAN中断回调函数](#can中断回调函数)
+- [参考资料](#参考资料)
+- [附录](#附录)
+  - [附录1 小米电机can通信协议](#附录1-小米电机can通信协议)
+
+
 # 介绍
 在使用小米电机的时候我们通常会选择一种模式进行控制，可以参考示例代码中的各种模式控制代码。
 
 除了发送控制指令对电机进行控制外，我们通常还需要获取电机的状态，这时候就需要用到CAN中断回调函数来接收电机返回的信息，同样可以参考示例代码中的中断回调函数代码。
 
-## 完整功能体验
+# 完整功能体验
 - [Gitee](https://gitee.com/Ljw0401/let-xiaomi-motor-move)
 - 
 
-## 驱动介绍
+# 驱动介绍
 小米电机结构体
 - 我们定义了小米电机结构体来标识电机的数据。
     ```C
@@ -76,8 +90,8 @@
 
 为了接收电机的数据，我们还提供了[CAN中断回调函数的示例代码](#can中断回调函数)
 
-## 示例代码
-### 力矩模式
+# 示例代码
+## 力矩模式
 ```C
 #include "MI_motor_drive.h"
 extern CAN_HandleTypeDef hcan1;
@@ -98,7 +112,7 @@ void control_task(void const *pvParameters)
 }
 ```
 
-### 位置模式
+## 位置模式
 ```C
 #include "MI_motor_drive.h"
 extern CAN_HandleTypeDef hcan1;
@@ -119,7 +133,7 @@ void control_task(void const *pvParameters)
 }
 ```
 
-### 速度模式
+## 速度模式
 ```C
 #include "MI_motor_drive.h"
 extern CAN_HandleTypeDef hcan1;
@@ -140,7 +154,7 @@ void control_task(void const *pvParameters)
 }
 ```
 
-<!-- ### 电流模式
+<!-- ## 电流模式
 ```C
 #include "MI_motor_drive.h"
 extern CAN_HandleTypeDef hcan1;
@@ -160,7 +174,7 @@ void control_task(void const *pvParameters)
 }
 ``` -->
 
-### CAN中断回调函数
+## CAN中断回调函数
 ```C
 /**
   * @brief          hal库CAN回调函数,接收电机数据
@@ -199,7 +213,105 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
 }
 ```
 
-## 参考资料
+# 参考资料
+
 [CyberGear微电机使用说明书.pdf](https://gitee.com/SMBU-POLARBEAR/technical-documentation/blob/master/%E7%94%B5%E6%9C%BA/%E5%B0%8F%E7%B1%B3/CyberGear%E5%BE%AE%E7%94%B5%E6%9C%BA%E4%BD%BF%E7%94%A8%E8%AF%B4%E6%98%8E%E4%B9%A6.pdf)<br>
 [小米微电机STM32 HAL库驱动教程](https://blog.csdn.net/m0_53802226/article/details/132941275)<br>
 [小米电机CyberGear STM32HAL 使用指南](https://blog.csdn.net/zdYukino/article/details/133505453)<br>
+
+# 附录
+## 附录1 小米电机can通信协议
+
+- 通信类型 0：获取设备 ID，获取设备的ID和64位MCU唯一标识符
+<table>
+<tr>
+    <th>数据域</th>
+    <th colspan="3"><center>ExtID(29 bit)</center></th>
+    <th>数据区(8 Byte)</th>
+</tr>
+
+<tr>
+    <td>数据域</td>
+    <td>0~7</td>
+    <td>8~23</td>
+    <td>24~28</td>
+    <td>0~7</td>
+</tr>
+
+<tr>
+    <td>描述</td>
+    <td>0</td>
+    <td>8~15：用来标识主机CAN_ID<br>
+        15~23：0</td>
+    <td>目标电机CAN_ID</td>
+    <td>0</td>
+</tr>
+</table>
+
+- 通信类型 1：运控模式电机控制指令，用来向电机发送控制指令 
+<table>
+<tr>
+    <th>数据域</th>
+    <th colspan="3"><center>ExtID(29 bit)</center></th>
+    <th>数据区(8 Byte)</th>
+</tr>
+
+<tr>
+    <td>数据域</td>
+    <td>0~7</td>
+    <td>8~23</td>
+    <td>24~28</td>
+    <td>0~7</td>
+</tr>
+
+<tr>
+    <td>描述</td>
+    <td>1</td>
+    <td>力矩(0~65535)<br>
+        对应(-12Nm~12Nm)</td>
+    <td>目标电机CAN_ID</td>
+    <td>0~1: 目标角度[0~65535]对应(-4π~4π)<br>
+        2~3: 目标角速度[0~65535]对应(-30rad/s~30rad/s)<br>
+        4~5：Kp [0~65535]对应(0.0~500.0)<br>
+        6~7：Kd [0~65535]对应(0.0~5.0)</td>
+</tr>
+</table>
+
+- 通信类型 2：电机反馈数据，用来向主机反馈电机运行状态 
+<table>
+<tr>
+    <th>数据域</th>
+    <th colspan="3"><center>ExtID(29 bit)</center></th>
+    <th>数据区(8 Byte)</th>
+</tr>
+
+<tr>
+    <td>数据域</td>
+    <td>0~7</td>
+    <td>8~23</td>
+    <td>24~28</td>
+    <td>0~7</td>
+</tr>
+
+<tr>
+    <td>描述</td>
+    <td>1</td>
+    <td>8~15:当前电机 CAN ID<br>
+        bit21~16:故障信息（0 无 1 有）<br>
+        bit21: 未标定<br>
+        bit20: HALL 编码故障<br>
+        bit19: 磁编码故障<br>
+        bit18: 过温<br>
+        bit17: 过流<br>
+        bit16: 欠压故障<br>
+        bit22~23:模式状态<br>
+        0 : Reset 模式[复位]<br>
+        1 : Cali 模式[标定]<br>
+        2 : Motor 模式[运行]</td>
+    <td>目标电机CAN_ID</td>
+    <td>0~1: 当前角度[0~65535]对应(-4π~4π)<br>
+        2~3: 当前角速度[0~65535]对应(-30rad/s~30rad/s)<br>
+        4~5:当前力矩[0~65535]对应（-12Nm~12Nm）<br>
+        6~7:当前温度：Temp(摄氏度)*10</td>
+</tr>
+</table>
