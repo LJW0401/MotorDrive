@@ -17,11 +17,16 @@
 
 #ifndef __DJI_MOTOR_DRIVE_H
 #define __DJI_MOTOR_DRIVE_H
+
 #include "struct_typedef.h"
 #include "stm32f4xx_hal.h"
 
 #define DJI_CAN_1 hcan1
 #define DJI_CAN_2 hcan2
+
+#define MAX_CURRENT_6020 30000
+#define MAX_CURRENT_3508 16384
+#define MAX_CURRENT_2006 10000
 
 typedef enum _CAN_TxSTD_ID_e
 {
