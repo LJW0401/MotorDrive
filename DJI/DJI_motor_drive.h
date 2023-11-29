@@ -25,9 +25,9 @@
 
 typedef enum _CAN_TxSTD_ID_e
 {
-    STD_ID_1FF = 0x1FF,
-    STD_ID_200 = 0x200,
-    STD_ID_2FF = 0x2FF,
+    TxSTD_ID_1FF = 0x1FF,
+    TxSTD_ID_200 = 0x200,
+    TxSTD_ID_2FF = 0x2FF,
 } CAN_TxSTD_ID_e;
 
 void CANSendDJIMotorCurrent(CAN_HandleTypeDef *CAN, CAN_TxHeaderTypeDef *tx_message, CAN_STD_ID_e CAN_STD_ID, int16_t current1, int16_t current2, int16_t current3, int16_t current4)
